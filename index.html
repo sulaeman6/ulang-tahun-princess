@@ -1,0 +1,2031 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Happy Birthday!</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&family=Poppins:wght@300;400;600;800&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    />
+    <style>
+      /* === Variabel & Reset === */
+      :root {
+        --bg: #0f0508;
+        --bg2: #1a0a10;
+        --fg: #fff5ee;
+        --fg-muted: #c4a0a8;
+        --accent: #e84057;
+        --accent-glow: rgba(232, 64, 87, 0.25);
+        --accent2: #f0c040;
+        --card: rgba(232, 64, 87, 0.05);
+        --card-border: rgba(232, 64, 87, 0.12);
+        --card-hover: rgba(232, 64, 87, 0.1);
+        --radius: 16px;
+        --font-display: "Dancing Script", cursive;
+        --font-ui: "Poppins", sans-serif;
+      }
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      html {
+        scroll-behavior: smooth;
+      }
+      body {
+        font-family: var(--font-ui);
+        background: var(--bg);
+        color: var(--fg);
+        overflow-x: hidden;
+        line-height: 1.6;
+        min-height: 100vh;
+      }
+      ::selection {
+        background: var(--accent);
+        color: #fff;
+      }
+
+      /* === Canvas Latar === */
+      #bgCanvas {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 0;
+        pointer-events: none;
+      }
+
+      /* === Scroll Progress === */
+      #scrollProgress {
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 3px;
+        width: 0;
+        background: linear-gradient(90deg, var(--accent), var(--accent2));
+        z-index: 1000;
+        transition: width 0.1s;
+      }
+
+      /* === Toast === */
+      #toastContainer {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        pointer-events: none;
+      }
+      .toast {
+        background: var(--bg2);
+        border: 1px solid var(--card-border);
+        color: var(--fg);
+        padding: 14px 22px;
+        border-radius: 12px;
+        font-size: 0.9rem;
+        max-width: 340px;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+        transform: translateX(120%);
+        transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+        pointer-events: auto;
+        backdrop-filter: blur(12px);
+      }
+      .toast.show {
+        transform: translateX(0);
+      }
+
+      /* === Penghitung Tombol === */
+      #btnCounter {
+        position: fixed;
+        bottom: 20px;
+        left: 20px;
+        z-index: 900;
+        background: var(--bg2);
+        border: 1px solid var(--card-border);
+        padding: 8px 16px;
+        border-radius: 30px;
+        font-size: 0.78rem;
+        color: var(--fg-muted);
+        backdrop-filter: blur(10px);
+        transition: transform 0.3s;
+      }
+      #btnCounter.bump {
+        transform: scale(1.15);
+      }
+      #btnCounter span {
+        color: var(--accent2);
+        font-weight: 700;
+      }
+
+      /* === Tombol Kembali Atas === */
+      #backToTop {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 900;
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        background: var(--accent);
+        color: #fff;
+        border: none;
+        cursor: pointer;
+        font-size: 1.1rem;
+        opacity: 0;
+        transform: translateY(20px);
+        transition: all 0.35s;
+        pointer-events: none;
+        box-shadow: 0 4px 15px var(--accent-glow);
+      }
+      #backToTop.visible {
+        opacity: 1;
+        transform: translateY(0);
+        pointer-events: auto;
+      }
+      #backToTop:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 25px var(--accent-glow);
+      }
+
+      #janganBtn:hover {
+        background: #333;
+        color: #aaa;
+      }
+
+      /* === Layout Utama === */
+      main {
+        position: relative;
+        z-index: 1;
+      }
+      section {
+        padding: 80px 24px;
+        max-width: 900px;
+        margin: 0 auto;
+        opacity: 0;
+        transform: translateY(40px);
+        transition:
+          opacity 0.7s ease,
+          transform 0.7s ease;
+      }
+      section.visible {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      /* === Hero === */
+      #hero {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 40px 24px;
+        opacity: 1;
+        transform: none;
+        position: relative;
+      }
+      .hero-glow {
+        position: absolute;
+        width: 400px;
+        height: 400px;
+        border-radius: 50%;
+        background: radial-gradient(
+          circle,
+          var(--accent-glow) 0%,
+          transparent 70%
+        );
+        pointer-events: none;
+        filter: blur(60px);
+        z-index: -1;
+        transition: transform 0.1s ease-out;
+      }
+      .hero-title {
+        font-family: var(--font-display);
+        font-size: clamp(3rem, 10vw, 6rem);
+        font-weight: 700;
+        line-height: 1.1;
+        margin-bottom: 12px;
+        background: linear-gradient(135deg, var(--accent), var(--accent2));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        animation: shimmer 3s ease-in-out infinite alternate;
+        background-size: 200% 200%;
+      }
+      @keyframes shimmer {
+        0% {
+          background-position: 0% 50%;
+        }
+        100% {
+          background-position: 100% 50%;
+        }
+      }
+      .hero-name {
+        font-family: var(--font-display);
+        font-size: clamp(1.8rem, 5vw, 3rem);
+        color: var(--accent2);
+        margin-bottom: 8px;
+        outline: none;
+        border-bottom: 2px dashed rgba(240, 192, 64, 0.3);
+        padding-bottom: 4px;
+        min-width: 60px;
+        cursor: text;
+        transition: border-color 0.3s;
+      }
+      .hero-name:focus {
+        border-color: var(--accent2);
+      }
+      .hero-sub {
+        color: var(--fg-muted);
+        font-size: 1rem;
+        margin-bottom: 40px;
+        font-weight: 300;
+        max-width: 400px;
+      }
+      .hero-btn {
+        padding: 16px 40px;
+        border: none;
+        border-radius: 50px;
+        background: linear-gradient(135deg, var(--accent), #c0304a);
+        color: #fff;
+        font-family: var(--font-ui);
+        font-size: 1.05rem;
+        font-weight: 600;
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+        transition:
+          transform 0.2s,
+          box-shadow 0.2s;
+        box-shadow: 0 4px 20px var(--accent-glow);
+      }
+      .hero-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 35px var(--accent-glow);
+      }
+      .hero-btn:active {
+        transform: scale(0.97);
+      }
+      .hero-btn::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.2);
+        transform: translate(-50%, -50%);
+        transition:
+          width 0.5s,
+          height 0.5s;
+      }
+      .hero-btn:active::after {
+        width: 300px;
+        height: 300px;
+      }
+      .scroll-hint {
+        position: absolute;
+        bottom: 30px;
+        left: 50%;
+        transform: translateX(-50%);
+        color: var(--fg-muted);
+        font-size: 0.75rem;
+        opacity: 0.5;
+        animation: bounce 2s infinite;
+      }
+      @keyframes bounce {
+        0%,
+        100% {
+          transform: translateX(-50%) translateY(0);
+        }
+        50% {
+          transform: translateX(-50%) translateY(8px);
+        }
+      }
+
+      /* === Section Title === */
+      .section-title {
+        font-family: var(--font-display);
+        font-size: clamp(2rem, 5vw, 3rem);
+        text-align: center;
+        margin-bottom: 12px;
+        color: var(--fg);
+      }
+      .section-desc {
+        text-align: center;
+        color: var(--fg-muted);
+        font-size: 0.9rem;
+        margin-bottom: 40px;
+        font-weight: 300;
+      }
+
+      /* === Grid Tombol === */
+      .btn-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 14px;
+      }
+      .action-btn {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        padding: 28px 12px;
+        border-radius: var(--radius);
+        border: 1px solid var(--card-border);
+        background: var(--card);
+        color: var(--fg);
+        cursor: pointer;
+        font-family: var(--font-ui);
+        font-size: 0.82rem;
+        font-weight: 400;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+        backdrop-filter: blur(6px);
+      }
+      .action-btn::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(
+          circle at 50% 120%,
+          var(--accent-glow),
+          transparent 70%
+        );
+        opacity: 0;
+        transition: opacity 0.3s;
+      }
+      .action-btn:hover::before {
+        opacity: 1;
+      }
+      .action-btn:hover {
+        border-color: rgba(232, 64, 87, 0.35);
+        transform: translateY(-4px);
+        box-shadow: 0 8px 30px rgba(232, 64, 87, 0.1);
+      }
+      .action-btn:active {
+        transform: scale(0.96) translateY(-2px);
+      }
+      .action-btn i {
+        font-size: 1.6rem;
+        color: var(--accent);
+        transition: transform 0.3s;
+      }
+      .action-btn:hover i {
+        transform: scale(1.15);
+      }
+      .action-btn.btn-boring {
+        border-color: rgba(120, 120, 120, 0.15);
+      }
+      .action-btn.btn-boring::before {
+        background: radial-gradient(
+          circle at 50% 120%,
+          rgba(100, 100, 100, 0.1),
+          transparent 70%
+        );
+      }
+      .action-btn.btn-boring i {
+        color: #666;
+      }
+      .action-btn.btn-boring:hover {
+        border-color: rgba(120, 120, 120, 0.25);
+      }
+
+      /* === Input Tanya === */
+      .tanya-box {
+        max-width: 400px;
+        margin: 20px auto 0;
+        display: none;
+      }
+      .tanya-box.active {
+        display: block;
+        animation: fadeUp 0.4s ease;
+      }
+      .tanya-input {
+        width: 100%;
+        padding: 12px 16px;
+        border-radius: 12px;
+        border: 1px solid var(--card-border);
+        background: var(--card);
+        color: var(--fg);
+        font-family: var(--font-ui);
+        font-size: 0.9rem;
+        outline: none;
+        transition: border-color 0.3s;
+      }
+      .tanya-input:focus {
+        border-color: var(--accent);
+      }
+      .tanya-input::placeholder {
+        color: var(--fg-muted);
+        opacity: 0.5;
+      }
+      .tanya-answer {
+        margin-top: 14px;
+        padding: 16px 20px;
+        border-radius: 12px;
+        background: var(--card);
+        border: 1px solid var(--card-border);
+        font-size: 0.95rem;
+        color: var(--accent2);
+        display: none;
+        text-align: center;
+        font-weight: 300;
+      }
+      .tanya-answer.show {
+        display: block;
+        animation: fadeUp 0.5s ease;
+      }
+
+      /* === Kue Ulang Tahun === */
+      .cake-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-bottom: 30px;
+        perspective: 600px;
+      }
+      .cake-plate {
+        width: 280px;
+        height: 14px;
+        border-radius: 0 0 50% 50% / 0 0 100% 100%;
+        background: linear-gradient(180deg, #ddd, #aaa);
+        margin-top: -2px;
+      }
+      .cake-body {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      .cake-layer {
+        border-radius: 8px 8px 4px 4px;
+        position: relative;
+        overflow: visible;
+      }
+      .cake-layer-1 {
+        width: 240px;
+        height: 55px;
+        background: linear-gradient(180deg, #f07088, #e84057);
+        z-index: 1;
+      }
+      .cake-layer-2 {
+        width: 190px;
+        height: 45px;
+        background: linear-gradient(180deg, #d85070, #c83050);
+        margin-top: -2px;
+        z-index: 2;
+      }
+      .cake-layer-3 {
+        width: 140px;
+        height: 38px;
+        background: linear-gradient(180deg, #c84060, #b02848);
+        margin-top: -2px;
+        z-index: 3;
+      }
+      .cake-frosting {
+        position: absolute;
+        top: -4px;
+        left: -2px;
+        right: -2px;
+        height: 16px;
+        border-radius: 8px 8px 0 0;
+        background: linear-gradient(180deg, #fff0f0, #ffe0e0);
+      }
+      .cake-drip {
+        position: absolute;
+        top: 12px;
+        width: 12px;
+        height: 0;
+        background: #fff0f0;
+        border-radius: 0 0 6px 6px;
+        animation: drip 2s ease-in forwards;
+      }
+      @keyframes drip {
+        0% {
+          height: 0;
+        }
+        100% {
+          height: var(--drip-h, 18px);
+        }
+      }
+      .cake-text {
+        position: absolute;
+        bottom: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-family: var(--font-display);
+        font-size: 0.85rem;
+        color: rgba(255, 255, 255, 0.85);
+        white-space: nowrap;
+        z-index: 5;
+      }
+      .candles-row {
+        display: flex;
+        gap: 16px;
+        margin-top: -2px;
+        z-index: 4;
+      }
+      .candle {
+        width: 7px;
+        height: 35px;
+        background: linear-gradient(180deg, #f5e6c8, #e8d5a8);
+        border-radius: 3px 3px 1px 1px;
+        position: relative;
+      }
+      .candle-stripe {
+        position: absolute;
+        width: 100%;
+        height: 5px;
+        background: var(--accent);
+        opacity: 0.5;
+        top: 10px;
+      }
+      .flame-wrap {
+        position: absolute;
+        top: -16px;
+        left: 50%;
+        transform: translateX(-50%);
+        transition:
+          opacity 0.5s,
+          transform 0.5s;
+      }
+      .flame-wrap.out {
+        opacity: 0;
+        transform: translateX(-50%) scaleY(0) scaleX(2);
+      }
+      .flame {
+        width: 10px;
+        height: 16px;
+        border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+        background: radial-gradient(
+          ellipse at 50% 70%,
+          #fff 0%,
+          #ffe040 30%,
+          #ff8020 60%,
+          #e84020 100%
+        );
+        animation: flicker 0.4s ease-in-out infinite alternate;
+        box-shadow: 0 0 8px 2px rgba(255, 160, 40, 0.6);
+      }
+      @keyframes flicker {
+        0% {
+          transform: scaleY(1) scaleX(1) rotate(-2deg);
+        }
+        100% {
+          transform: scaleY(1.12) scaleX(0.88) rotate(2deg);
+        }
+      }
+      .smoke-puff {
+        position: absolute;
+        top: -8px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 4px;
+        height: 4px;
+        border-radius: 50%;
+        background: rgba(200, 200, 200, 0.4);
+        animation: smokeRise 1s ease-out forwards;
+        display: none;
+      }
+      .smoke-puff.active {
+        display: block;
+      }
+      @keyframes smokeRise {
+        0% {
+          opacity: 0.5;
+          transform: translateX(-50%) translateY(0) scale(1);
+        }
+        100% {
+          opacity: 0;
+          transform: translateX(-50%) translateY(-35px) scale(3);
+        }
+      }
+      .wish-text {
+        margin-top: 24px;
+        font-family: var(--font-display);
+        font-size: 1.6rem;
+        color: var(--accent2);
+        opacity: 0;
+        transform: translateY(10px);
+        transition: all 0.8s ease;
+        text-align: center;
+      }
+      .wish-text.show {
+        opacity: 1;
+        transform: translateY(0);
+      }
+      .cake-actions {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+      .cake-btn {
+        padding: 10px 24px;
+        border-radius: 50px;
+        border: 1px solid var(--card-border);
+        background: var(--card);
+        color: var(--fg);
+        font-family: var(--font-ui);
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: all 0.3s;
+        backdrop-filter: blur(6px);
+      }
+      .cake-btn:hover {
+        border-color: var(--accent);
+        background: var(--card-hover);
+        transform: translateY(-2px);
+      }
+      .cake-btn:active {
+        transform: scale(0.96);
+      }
+      .cake-btn:disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
+        transform: none;
+      }
+      .cake-btn i {
+        margin-right: 6px;
+      }
+
+      /* === Pertanyaan Penting === */
+      .question-box {
+        text-align: center;
+        padding: 40px 20px;
+        background: var(--card);
+        border: 1px solid var(--card-border);
+        border-radius: var(--radius);
+        position: relative;
+        overflow: hidden;
+        min-height: 220px;
+      }
+      .question-text {
+        font-family: var(--font-display);
+        font-size: clamp(1.5rem, 4vw, 2.2rem);
+        margin-bottom: 30px;
+        color: var(--fg);
+      }
+      .question-btns {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 30px;
+        flex-wrap: wrap;
+      }
+      .btn-ya {
+        padding: 16px 50px;
+        border: none;
+        border-radius: 50px;
+        background: linear-gradient(135deg, var(--accent2), #d4a020);
+        color: #1a0a02;
+        font-family: var(--font-ui);
+        font-size: 1.2rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.3s;
+        box-shadow: 0 4px 20px rgba(240, 192, 64, 0.3);
+      }
+      .btn-ya:hover {
+        transform: scale(1.05);
+        box-shadow: 0 6px 30px rgba(240, 192, 64, 0.4);
+      }
+      .btn-tidak {
+        padding: 10px 24px;
+        border: 1px solid rgba(120, 120, 120, 0.3);
+        border-radius: 50px;
+        background: rgba(60, 60, 60, 0.3);
+        color: #888;
+        font-family: var(--font-ui);
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: all 0.15s;
+        position: relative;
+      }
+      .btn-tidak:hover {
+        background: rgba(60, 60, 60, 0.5);
+      }
+      .celebration-text {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        gap: 10px;
+        background: var(--bg2);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.5s;
+        border-radius: var(--radius);
+      }
+      .celebration-text.show {
+        opacity: 1;
+        pointer-events: auto;
+      }
+      .celebration-text .big-heart {
+        font-size: 3rem;
+        color: var(--accent);
+        animation: pulse 1s infinite;
+      }
+      .celebration-text p {
+        font-size: 1.2rem;
+        color: var(--accent2);
+        font-weight: 600;
+      }
+
+      /* === Kartu Pesan === */
+      .cards-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+      }
+      .love-card {
+        height: 180px;
+        perspective: 800px;
+        cursor: pointer;
+      }
+      .love-card-inner {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        transform-style: preserve-3d;
+      }
+      .love-card.flipped .love-card-inner {
+        transform: rotateY(180deg);
+      }
+      .love-card-front,
+      .love-card-back {
+        position: absolute;
+        inset: 0;
+        border-radius: var(--radius);
+        backface-visibility: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        gap: 8px;
+        padding: 20px;
+        text-align: center;
+      }
+      .love-card-front {
+        background: var(--card);
+        border: 1px solid var(--card-border);
+        backdrop-filter: blur(6px);
+      }
+      .love-card-front i {
+        font-size: 2rem;
+        color: var(--accent);
+      }
+      .love-card-front span {
+        font-size: 0.85rem;
+        color: var(--fg-muted);
+      }
+      .love-card-back {
+        background: linear-gradient(
+          135deg,
+          rgba(232, 64, 87, 0.15),
+          rgba(240, 192, 64, 0.1)
+        );
+        border: 1px solid rgba(232, 64, 87, 0.25);
+        transform: rotateY(180deg);
+      }
+      .love-card-back p {
+        font-size: 0.9rem;
+        color: var(--fg);
+        font-weight: 300;
+        line-height: 1.6;
+      }
+
+      /* === Footer === */
+      footer {
+        position: relative;
+        z-index: 1;
+        text-align: center;
+        padding: 40px 24px 30px;
+        color: var(--fg-muted);
+        font-size: 0.8rem;
+        font-weight: 300;
+        border-top: 1px solid var(--card-border);
+        max-width: 900px;
+        margin: 0 auto;
+      }
+      footer .footer-heart {
+        color: var(--accent);
+        animation: pulse 1.5s infinite;
+        display: inline-block;
+      }
+
+      /* === Efek Visual === */
+      .confetti-piece {
+        position: fixed;
+        top: -10px;
+        z-index: 9998;
+        pointer-events: none;
+        border-radius: 2px;
+        animation: confettiFall var(--dur) linear forwards;
+      }
+      @keyframes confettiFall {
+        0% {
+          transform: translateY(0) rotate(0deg) scale(1);
+          opacity: 1;
+        }
+        80% {
+          opacity: 1;
+        }
+        100% {
+          transform: translateY(110vh) rotate(var(--rot)) scale(0.5);
+          opacity: 0;
+        }
+      }
+      .heart-burst {
+        position: fixed;
+        z-index: 9998;
+        pointer-events: none;
+        color: var(--accent);
+        animation: heartFly var(--dur) ease-out forwards;
+        font-size: var(--size);
+      }
+      @keyframes heartFly {
+        0% {
+          transform: translate(0, 0) scale(0);
+          opacity: 1;
+        }
+        50% {
+          opacity: 1;
+        }
+        100% {
+          transform: translate(var(--tx), var(--ty)) scale(1.2);
+          opacity: 0;
+        }
+      }
+      .star-rain {
+        position: fixed;
+        top: -20px;
+        z-index: 9998;
+        pointer-events: none;
+        color: var(--accent2);
+        animation: starDrop var(--dur) linear forwards;
+        font-size: var(--size);
+      }
+      @keyframes starDrop {
+        0% {
+          transform: translateY(0) rotate(0deg);
+          opacity: 1;
+        }
+        100% {
+          transform: translateY(110vh) rotate(720deg);
+          opacity: 0;
+        }
+      }
+      .balloon-el {
+        position: fixed;
+        bottom: -80px;
+        z-index: 9998;
+        pointer-events: none;
+        width: var(--bw);
+        height: calc(var(--bw) * 1.2);
+        border-radius: 50% 50% 50% 50% / 40% 40% 60% 60%;
+        animation: balloonFloat var(--dur) ease-out forwards;
+        box-shadow:
+          inset -8px -4px 12px rgba(0, 0, 0, 0.15),
+          inset 6px 6px 10px rgba(255, 255, 255, 0.15);
+      }
+      .balloon-el::after {
+        content: "";
+        position: absolute;
+        bottom: -25px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 1px;
+        height: 25px;
+        background: rgba(255, 255, 255, 0.3);
+      }
+      @keyframes balloonFloat {
+        0% {
+          transform: translateY(0) translateX(0);
+          opacity: 0.9;
+        }
+        100% {
+          transform: translateY(-120vh) translateX(var(--drift));
+          opacity: 0;
+        }
+      }
+      .firework-p {
+        position: fixed;
+        z-index: 9998;
+        pointer-events: none;
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        animation: fwBurst 0.9s ease-out forwards;
+      }
+      @keyframes fwBurst {
+        0% {
+          transform: translate(0, 0) scale(1);
+          opacity: 1;
+        }
+        100% {
+          transform: translate(var(--dx), var(--dy)) scale(0);
+          opacity: 0;
+        }
+      }
+      @keyframes fadeUp {
+        from {
+          opacity: 0;
+          transform: translateY(15px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      @keyframes pulse {
+        0%,
+        100% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.15);
+        }
+      }
+
+      /* === Responsif === */
+      @media (max-width: 768px) {
+        .btn-grid {
+          grid-template-columns: repeat(2, 1fr);
+          gap: 10px;
+        }
+        .action-btn {
+          padding: 20px 10px;
+        }
+        .action-btn i {
+          font-size: 1.3rem;
+        }
+        .cards-grid {
+          grid-template-columns: 1fr;
+        }
+        .cake-layer-1 {
+          width: 200px;
+          height: 48px;
+        }
+        .cake-layer-2 {
+          width: 160px;
+          height: 40px;
+        }
+        .cake-layer-3 {
+          width: 120px;
+          height: 34px;
+        }
+        .cake-plate {
+          width: 230px;
+        }
+        .candles-row {
+          gap: 12px;
+        }
+        .candle {
+          height: 28px;
+        }
+        section {
+          padding: 60px 18px;
+        }
+      }
+      @media (max-width: 400px) {
+        .btn-grid {
+          grid-template-columns: repeat(2, 1fr);
+          gap: 8px;
+        }
+        .action-btn {
+          padding: 16px 8px;
+          font-size: 0.75rem;
+        }
+        .cake-layer-1 {
+          width: 170px;
+          height: 42px;
+        }
+        .cake-layer-2 {
+          width: 135px;
+          height: 36px;
+        }
+        .cake-layer-3 {
+          width: 100px;
+          height: 30px;
+        }
+        .cake-plate {
+          width: 200px;
+        }
+        .candles-row {
+          gap: 10px;
+        }
+      }
+
+      /* === Reduced Motion === */
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation-duration: 0.01ms !important;
+          transition-duration: 0.01ms !important;
+        }
+
+        .confetti-piece,
+        .heart-burst,
+        .star-rain,
+        .balloon-el,
+        .firework-p {
+          display: none;
+        }
+      }
+
+      /* ================= PHOTO RAIN ================= */
+
+      .memory-photo {
+        position: fixed;
+        top: -200px;
+
+        width: 140px;
+        height: 140px;
+
+        object-fit: cover;
+
+        border-radius: 18px;
+
+        border: 5px solid white;
+
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.35);
+
+        z-index: 99999;
+
+        pointer-events: none;
+
+        animation: memoryFall linear forwards;
+      }
+
+      @keyframes memoryFall {
+        0% {
+          transform: translateY(-200px) rotate(0deg) scale(0.5);
+
+          opacity: 0;
+        }
+
+        15% {
+          opacity: 1;
+        }
+
+        100% {
+          transform: translateY(120vh) rotate(360deg) scale(1);
+
+          opacity: 0;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="bgCanvas" aria-hidden="true"></canvas>
+    <div id="scrollProgress" aria-hidden="true"></div>
+    <div id="toastContainer" aria-live="polite"></div>
+    <div id="btnCounter">Tombol ditekan: <span id="pressCount">0</span></div>
+    <button id="backToTop" aria-label="Kembali ke atas">
+      <i class="fas fa-chevron-up"></i>
+    </button>
+
+    <main>
+      <!-- Hero -->
+      <header id="hero">
+        <div class="hero-glow" id="heroGlow"></div>
+        <h1 class="hero-title">Happy Birthday!</h1>
+        <h2
+          class="hero-name"
+          contenteditable="true"
+          spellcheck="false"
+          role="textbox"
+          aria-label="Nama orang yang berulang tahun"
+        >
+          Azkia Fratiwi (Princess kiyuttt)
+        </h2>
+        <p class="hero-sub">
+          Selamat ulang tahun princess yang cantik imut lucu gemess semua nyaa
+          di borong sama kamuu. terima kasih yaaa sudah hadir dan menjadi bagian
+          terindah dalam hidupku. Semoga di usiamu yang baru ini semua impianmu
+          satu per satu terwujud, kesehatan selalu menyertaimu, dan kebahagiaan
+          tak pernah jauh darimu. Aku berharap bisa terus menemani setiap
+          langkahmu, merayakan setiap pencapaianmu, dan mencintaimu lebih dalam
+          setiap harinya. I always love you ❤️
+        </p>
+        <button class="hero-btn" id="mulaiBtn" aria-label="Mulai perayaan">
+          <i class="fas fa-play" style="margin-right: 8px"></i>Mulai Perayaan
+        </button>
+        <div class="scroll-hint">
+          <i class="fas fa-chevron-down"></i> Scroll ke bawah
+        </div>
+      </header>
+
+      <!-- Tombol Kegembiraan -->
+      <section id="secButtons" aria-labelledby="titleButtons">
+        <h2 class="section-title" id="titleButtons">Tombol Kegembiraan</h2>
+        <p class="section-desc">
+          pencet tombol nya doll aku harap kamuu sukaa yaaa
+        </p>
+        <div class="btn-grid">
+          <button
+            class="action-btn"
+            data-action="surprise"
+            aria-label="Surprise Me"
+          >
+            <i class="fas fa-gift"></i>Jangan di pencet nanti hujan
+          </button>
+
+          <button
+            class="action-btn"
+            data-action="tanya"
+            aria-label="Tanya Apa Aja"
+          >
+            <i class="fas fa-wand-magic-sparkles"></i>Tanya Apa Aja
+          </button>
+
+          <button
+            class="action-btn"
+            data-action="balon"
+            aria-label="Lepas Balon"
+          >
+            <i class="fas fa-cloud"></i>Lepas Balon
+          </button>
+          <button
+            class="action-btn btn-boring"
+            data-action="jangan"
+            aria-label="Jangan dipencet gaadaa apa apaaa"
+          >
+            <i class="fas fa-ban"></i>jangan dipencet gaada apa apaaa
+          </button>
+        </div>
+        <div class="tanya-box" id="tanyaBox">
+          <input
+            type="text"
+            class="tanya-input"
+            id="tanyaInput"
+            placeholder="Ketik pertanyaanmu di sini..."
+            maxlength="100"
+            aria-label="Pertanyaan"
+          />
+          <div class="tanya-answer" id="tanyaAnswer"></div>
+        </div>
+      </section>
+
+      <!-- Kue Ulang Tahun -->
+      <section id="secCake" aria-labelledby="titleCake">
+        <h2 class="section-title" id="titleCake">
+          doll ada kue doll buat kamuu
+        </h2>
+        <p class="section-desc">Nyalakan lilin, tiup, dan potong kuenya!</p>
+        <div class="cake-container" id="cakeContainer">
+          <div class="candles-row" id="candlesRow"></div>
+          <div class="cake-body">
+            <div class="cake-layer cake-layer-3">
+              <div class="cake-frosting"></div>
+            </div>
+            <div class="cake-layer cake-layer-2">
+              <div class="cake-frosting"></div>
+              <span class="cake-text">HBD!</span>
+            </div>
+            <div class="cake-layer cake-layer-1">
+              <div class="cake-frosting"></div>
+            </div>
+          </div>
+          <div class="cake-plate"></div>
+          <div class="wish-text" id="wishText">
+            Semoga semua harapanmu terwujud!
+          </div>
+        </div>
+        <div class="cake-actions">
+          <button class="cake-btn" id="btnNyalakan">
+            <i class="fas fa-fire"></i>Nyalakan Lilin
+          </button>
+          <button class="cake-btn" id="btnTiup" disabled>
+            <i class="fas fa-wind"></i>Tiup Lilin
+          </button>
+          <button class="cake-btn" id="btnPotong" disabled>
+            <i class="fas fa-utensils"></i>Potong Kue
+          </button>
+        </div>
+      </section>
+
+      <!-- Pertanyaan Penting -->
+      <section id="secQuestion" aria-labelledby="titleQuestion">
+        <h2 class="section-title" id="titleQuestion">Pertanyaan Penting</h2>
+        <p class="section-desc">
+          princess aku punya satuu pertanyaan buat kamuu
+        </p>
+        <div class="question-box" id="questionBox">
+          <p class="question-text">Kamu sayang akuu kan princess?</p>
+          <div class="question-btns">
+            <button class="btn-ya" id="btnYa">Iyaa dong sayang</button>
+            <button class="btn-tidak" id="btnTidak">Enggaa</button>
+          </div>
+          <div class="celebration-text" id="celebrationText">
+            <div class="big-heart"><i class="fas fa-heart"></i></div>
+            <p>
+              Aku juga sayang kamu princes yang cantik imut lucu gemesin baik
+              hati dan tidak sombong
+            </p>
+            <p
+              style="
+                font-size: 0.85rem;
+                color: var(--fg-muted);
+                font-weight: 300;
+                margin-top: 4px;
+              "
+            >
+              Selama lama lama lama lama lama lama lama lama lama lama lama lama
+              lama lama lama lama lama lama lama lama lama lama lama lama lama
+              lama lama lama dan selamanya...
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Pesan Romantis -->
+      <section id="secCards" aria-labelledby="titleCards">
+        <h2 class="section-title" id="titleCards">
+          Ada pesan nihh buat princess
+        </h2>
+        <p class="section-desc">pencet satu satuu yaa princess</p>
+        <div class="cards-grid" id="cardsGrid"></div>
+      </section>
+    </main>
+
+    <footer>
+      <p>
+        Dibuat dengan
+        <span class="footer-heart"><i class="fas fa-heart"></i></span> khusus
+        untukmu
+      </p>
+    </footer>
+
+    <script>
+      /* =============================================
+   DATA & KONFIGURASI
+   ============================================= */
+
+      // Tema warna
+
+      let currentTheme = 0;
+      const memories = [
+        "images/foto1.jpg",
+        "images/foto2.jpg",
+        "images/foto3.jpg",
+        "images/foto4.jpg",
+        "images/foto5.jpg",
+        "images/foto6.jpg",
+        "images/foto7.jpg",
+        "images/foto8.jpg",
+        "images/foto9.jpg",
+        "images/foto10.jpg",
+        "images/foto11.jpg",
+        "images/foto12.jpg",
+        "images/foto13.jpg",
+        "images/foto14.jpg",
+        "images/foto15.jpg",
+      ];
+
+      // Pesan romantis acak
+      const romanticMessages = [
+        "Kamu adalah alasan aku tersenyum setiap hari.",
+        "Dunia ini lebih indah karena ada kamu di dalamnya.",
+        "Aku bersyukur setiap hari karena memilikimu.",
+        "Kamu bukan hanya kekasih, kamu adalah rumahku.",
+        "Terima kasih sudah menjadi bagian terindah dalam hidupku.",
+        "Aku tidak butuh alasan untuk mencintaimu — kamu sudah cukup.",
+        "Setiap detik bersamamu adalah kenangan terbaikku.",
+        "Kamu adalah impian yang tak pernah aku sangka menjadi kenyataan.",
+        "Jika cinta itu bahasa, kamu adalah seluruh kamusnya.",
+        "Di antara milyaran orang di dunia ini, aku memilih kamu. Selalu.",
+        "Senyummu bisa mengubah hari terburukku menjadi yang terbaik.",
+        "Kamu adalah hal pertama yang kupikirkan saat bangun tidur.",
+      ];
+
+      // Jawaban magic 8-ball
+      const magicAnswers = [
+        "Tentu saja! Kamu adalah segalanya.",
+        "100% iya, tidak perlu diragukan lagi.",
+        "Tanya lagi nanti... aku lagi pusing mikirin kamu.",
+        "Menurut hatiku, iya.",
+        "Tidak mungkin! Kamu selalu benar.",
+        "Jawabannya ada di mata kamu yang manis.",
+        "Definitif! Seperti cintaku padamu.",
+        "Mungkin... tapi yang pasti aku cinta kamu.",
+        "Tidak... bercanda! Tentu iya!",
+        "Rahasia. Tapi jawabannya selalu iya untukmu.",
+        "Hanya Tuhan yang tahu. Tapi aku yakin iya.",
+        'Tanda-tandanya mengarah ke "iya".',
+      ];
+
+      // Pesan kartu cinta
+      const cardMessages = [
+        "Kalau ada satu hal yang ingin terus aku lakukan, itu adalah mencintaimu. Bukan hanya saat semuanya terasa mudah, tetapi juga ketika kita menghadapi hari-hari yang sulit. Aku ingin tetap ada, menggenggam tanganmu, mendukung setiap langkahmu, dan menjadi tempatmu pulang. Karena bagiku, rumah bukanlah sebuah tempat, melainkan dirimu.",
+        "Aku tidak butuh seseorang yang sempurna, karena aku sudah menemukan seseorang yang membuat hidupku terasa sempurna dengan segala kekurangannya. Terima kasih sudah menjadi alasan di balik senyumku setiap hari. Semoga kita bisa terus bersama, saling menjaga, saling menguatkan, dan saling mencintai sampai kapan pun.",
+        "Mungkin aku bukan orang yang paling pandai mengungkapkan perasaan. Tapi kalau ada satu hal yang ingin kamu percaya, Aku ingin terus belajar menjadi pasangan yang lebih baik, dan menciptakan banyak kenangan indah. Aku berharap suatu hari nanti, kita bisa melihat kembali perjalanan ini sambil tersenyum dan berkata, 'Ternyata semua perjuangan kita tidak sia-sia,'",
+        "Maapp yaaa princesss, di hari spesialmu ini aku belum bisa ngasih hadiah yang mungkin kamu harapkan. Aku tahu hadiah memang bukan segalanya, tapi tetap aja aku pengen bisa bikin hari ulang tahunmu lebih berkesan. Untuk saat ini, yang bisa aku kasih cuma doa dan rasa sayangku yang tulus. Semoga semua impianmu satu per satu tercapai, kesehatan dan kebahagiaan selalu menyertaimu, dan semoga aku masih diberi kesempatan untuk menemani setiap langkahmu.",
+      ];
+
+      /* =============================================
+   UTILITAS
+   ============================================= */
+
+      let pressCount = 0;
+      const pressEl = document.getElementById("pressCount");
+      const counterEl = document.getElementById("btnCounter");
+
+      function countPress() {
+        pressCount++;
+        pressEl.textContent = pressCount;
+        counterEl.classList.add("bump");
+        setTimeout(() => counterEl.classList.remove("bump"), 200);
+        // Pesan milestone
+        if (pressCount === 10)
+          showToast("Wah, kamu sudah tekan 10 tombol! Penasaran banget ya?");
+        else if (pressCount === 25)
+          showToast("25 tombol! Kamu memang spesial.");
+        else if (pressCount === 50)
+          showToast("50 tombol! Aku yakin kamu menikmati ini.");
+        else if (pressCount === 100)
+          showToast("100 TOMBOL! Kamu layak dapat penghargaan!");
+      }
+
+      // Toast
+      function showToast(msg, dur = 3500) {
+        const t = document.createElement("div");
+        t.className = "toast";
+        t.textContent = msg;
+        document.getElementById("toastContainer").appendChild(t);
+        requestAnimationFrame(() =>
+          requestAnimationFrame(() => t.classList.add("show")),
+        );
+        setTimeout(() => {
+          t.classList.remove("show");
+          setTimeout(() => t.remove(), 350);
+        }, dur);
+      }
+
+      // Acak dari array
+      function pick(arr) {
+        return arr[Math.floor(Math.random() * arr.length)];
+      }
+
+      // Angka acak dalam rentang
+      function rand(min, max) {
+        return Math.random() * (max - min) + min;
+      }
+
+      /* =============================================
+   EFEK VISUAL
+   ============================================= */
+
+      // Confetti
+      function spawnConfetti(count = 60) {
+        const colors = [
+          "#e84057",
+          "#f0c040",
+          "#ff8040",
+          "#ff40a0",
+          "#40e0d0",
+          "#80f060",
+          "#a060ff",
+        ];
+        for (let i = 0; i < count; i++) {
+          const el = document.createElement("div");
+          el.className = "confetti-piece";
+          const size = rand(6, 12);
+          const dur = rand(2, 4);
+          el.style.cssText = `
+      left:${rand(5, 95)}%; width:${size}px; height:${size * rand(0.5, 1.5)}px;
+      background:${pick(colors)}; --dur:${dur}s; --rot:${rand(360, 1440)}deg;
+      animation-delay:${rand(0, 0.5)}s; border-radius:${Math.random() > 0.5 ? "50%" : "2px"};
+    `;
+          document.body.appendChild(el);
+          setTimeout(() => el.remove(), (dur + 0.5) * 1000);
+        }
+      }
+      function startMemoryRain() {
+        let total = 80;
+
+        for (let i = 0; i < total; i++) {
+          setTimeout(() => {
+            const img = document.createElement("img");
+
+            img.src = memories[Math.floor(Math.random() * memories.length)];
+
+            img.className = "memory-photo";
+
+            img.style.left = Math.random() * 90 + "vw";
+
+            img.style.animationDuration = 6 + Math.random() * 3 + "s";
+
+            img.style.width = 100 + Math.random() * 100 + "px";
+
+            img.style.height = img.style.width;
+
+            img.style.transform = `rotate(${Math.random() * 360}deg)`;
+
+            document.body.appendChild(img);
+
+            setTimeout(() => {
+              img.remove();
+            }, 9000);
+          }, i * 150);
+        }
+      }
+      // Ledakan hati
+      function spawnHearts(cx, cy, count = 18) {
+        for (let i = 0; i < count; i++) {
+          const el = document.createElement("div");
+          el.className = "heart-burst";
+          const angle = ((Math.PI * 2) / count) * i + rand(-0.3, 0.3);
+          const dist = rand(80, 200);
+          const tx = Math.cos(angle) * dist;
+          const ty = Math.sin(angle) * dist;
+          const size = rand(14, 28);
+          el.style.cssText = `
+      left:${cx}px; top:${cy}px; --tx:${tx}px; --ty:${ty}px;
+      --dur:${rand(0.6, 1.2)}s; --size:${size}px; color:${pick(["#e84057", "#ff4080", "#ff6090", "#e83060"])};
+    `;
+          el.innerHTML = '<i class="fas fa-heart"></i>';
+          document.body.appendChild(el);
+          setTimeout(() => el.remove(), 1500);
+        }
+      }
+
+      // Hujan bintang
+      function spawnStars(count = 30) {
+        for (let i = 0; i < count; i++) {
+          const el = document.createElement("div");
+          el.className = "star-rain";
+          const size = rand(10, 22);
+          const dur = rand(2, 4);
+          el.style.cssText = `
+      left:${rand(2, 98)}%; --dur:${dur}s; --size:${size}px;
+      animation-delay:${rand(0, 1.5)}s; opacity:${rand(0.5, 1)};
+    `;
+          el.innerHTML = '<i class="fas fa-star"></i>';
+          document.body.appendChild(el);
+          setTimeout(() => el.remove(), (dur + 1.5) * 1000);
+        }
+      }
+
+      // Balon
+      function spawnBalloons(count = 8) {
+        const colors = [
+          "#e84057",
+          "#f0c040",
+          "#40c0e0",
+          "#ff8040",
+          "#a060ff",
+          "#80f060",
+          "#ff40a0",
+        ];
+        for (let i = 0; i < count; i++) {
+          const el = document.createElement("div");
+          el.className = "balloon-el";
+          const bw = rand(30, 50);
+          const dur = rand(3, 5);
+          el.style.cssText = `
+      left:${rand(5, 90)}%; --bw:${bw}px; --dur:${dur}s;
+      --drift:${rand(-60, 60)}px; background:${pick(colors)};
+      animation-delay:${rand(0, 1)}s;
+    `;
+          document.body.appendChild(el);
+          setTimeout(() => el.remove(), (dur + 1) * 1000);
+        }
+      }
+
+      // Kembang api
+      function spawnFirework(x, y) {
+        const colors = [
+          "#e84057",
+          "#f0c040",
+          "#ff8040",
+          "#ff40a0",
+          "#40e0d0",
+          "#80f060",
+        ];
+        for (let i = 0; i < 35; i++) {
+          const el = document.createElement("div");
+          el.className = "firework-p";
+          const angle = ((Math.PI * 2) / 35) * i;
+          const vel = rand(80, 180);
+          el.style.cssText = `
+      left:${x}px; top:${y}px;
+      background:${pick(colors)};
+      --dx:${Math.cos(angle) * vel}px; --dy:${Math.sin(angle) * vel}px;
+      box-shadow: 0 0 6px ${pick(colors)};
+    `;
+          document.body.appendChild(el);
+          setTimeout(() => el.remove(), 1000);
+        }
+      }
+
+      /* =============================================
+   CANVAS LATAR - PARTIKEL HATI
+   ============================================= */
+
+      const canvas = document.getElementById("bgCanvas");
+      const ctx = canvas.getContext("2d");
+      let particles = [];
+
+      function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      }
+      resizeCanvas();
+      window.addEventListener("resize", resizeCanvas);
+
+      class HeartParticle {
+        constructor() {
+          this.reset(true);
+        }
+        reset(initial = false) {
+          this.x = rand(0, canvas.width);
+          this.y = initial ? rand(0, canvas.height) : canvas.height + 20;
+          this.size = rand(8, 18);
+          this.speedY = -rand(0.3, 1.2);
+          this.speedX = rand(-0.2, 0.2);
+          this.opacity = rand(0.08, 0.25);
+          this.wobbleSpeed = rand(0.005, 0.015);
+          this.wobbleAmp = rand(0.3, 0.8);
+          this.phase = rand(0, Math.PI * 2);
+        }
+        update() {
+          this.y += this.speedY;
+          this.phase += this.wobbleSpeed;
+          this.x += this.speedX + Math.sin(this.phase) * this.wobbleAmp;
+          if (this.y < -30) this.reset();
+        }
+        draw() {
+          ctx.save();
+          ctx.globalAlpha = this.opacity;
+          ctx.font = `${this.size}px serif`;
+          ctx.fillStyle =
+            getComputedStyle(document.documentElement)
+              .getPropertyValue("--accent")
+              .trim() || "#e84057";
+          ctx.fillText("♥", this.x, this.y);
+          ctx.restore();
+        }
+      }
+
+      // Inisialisasi partikel
+      for (let i = 0; i < 35; i++) particles.push(new HeartParticle());
+
+      function animateCanvas() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach((p) => {
+          p.update();
+          p.draw();
+        });
+        requestAnimationFrame(animateCanvas);
+      }
+      animateCanvas();
+
+      /* =============================================
+   GLOW MOUSE DI HERO
+   ============================================= */
+
+      const heroGlow = document.getElementById("heroGlow");
+      document.getElementById("hero").addEventListener("mousemove", (e) => {
+        const rect = e.currentTarget.getBoundingClientRect();
+        heroGlow.style.transform = `translate(${e.clientX - rect.left - 200}px, ${e.clientY - rect.top - 200}px)`;
+      });
+
+      /* =============================================
+   TOMBOL MULAI
+   ============================================= */
+
+      document.getElementById("mulaiBtn").addEventListener("click", () => {
+        countPress();
+        spawnConfetti(80);
+        // Scroll ke section pertama
+        setTimeout(() => {
+          document
+            .getElementById("secButtons")
+            .scrollIntoView({ behavior: "smooth" });
+        }, 400);
+      });
+
+      /* =============================================
+   GRID TOMBOL AKSI
+   ============================================= */
+
+      const janganBtn = document.getElementById("janganBtn");
+      let janganCount = 0;
+
+      document.querySelector(".btn-grid").addEventListener("click", (e) => {
+        const btn = e.target.closest(".action-btn");
+        if (!btn) return;
+        const action = btn.dataset.action;
+        countPress();
+
+        switch (action) {
+          case "surprise": {
+            startMemoryRain();
+
+            spawnConfetti(120);
+
+            spawnHearts(window.innerWidth / 2, window.innerHeight / 2, 30);
+
+            spawnStars(30);
+
+            showToast("tuhhh kann hujann😭 ❤️", 5000);
+
+            break;
+          }
+          case "pesan":
+            showToast(pick(romanticMessages), 4000);
+            break;
+          case "bintang":
+            spawnStars(45);
+            showToast("Bintang-bintang jatuh untukmu!");
+            break;
+          case "hearts":
+            spawnHearts(window.innerWidth / 2, window.innerHeight / 2, 30);
+            break;
+          case "tanya":
+            document.getElementById("tanyaBox").classList.toggle("active");
+            if (
+              document.getElementById("tanyaBox").classList.contains("active")
+            ) {
+              document.getElementById("tanyaInput").focus();
+            }
+            break;
+          case "suasana":
+            currentTheme = (currentTheme + 1) % themes.length;
+            applyTheme(themes[currentTheme]);
+            showToast(`Suasana: ${themes[currentTheme].name}`);
+            break;
+          case "balon":
+            spawnBalloons(10);
+            showToast("liatt boss balon nyaa terbang");
+            break;
+          case "jangan":
+            janganCount++;
+            if (janganCount === 1) {
+              showToast("gaada apa apa dol jangan di pencet");
+              janganBtn.style.display = "block";
+              janganBtn.style.left = rand(10, 70) + "%";
+              janganBtn.style.top = rand(20, 70) + "%";
+            } else if (janganCount === 2) {
+              showToast("si dodol ngahajaken😭");
+              moveJangan();
+            } else if (janganCount === 3) {
+              showToast("di bilangin apaaa da gaadaaa apa apa ehhh dodol😭");
+              janganBtn.style.display = "none";
+              janganCount = 0;
+              spawnHearts(window.innerWidth / 2, window.innerHeight / 2, 15);
+            } else {
+              moveJangan();
+            }
+            break;
+        }
+      });
+
+      // Input Tanya Apa Aja
+      const tanyaInput = document.getElementById("tanyaInput");
+      const tanyaAnswer = document.getElementById("tanyaAnswer");
+      tanyaInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" && tanyaInput.value.trim()) {
+          countPress();
+          tanyaAnswer.classList.remove("show");
+          setTimeout(() => {
+            tanyaAnswer.textContent = pick(magicAnswers);
+            tanyaAnswer.classList.add("show");
+            // Efek kecil
+            spawnHearts(
+              tanyaAnswer.getBoundingClientRect().left +
+                tanyaAnswer.offsetWidth / 2,
+              tanyaAnswer.getBoundingClientRect().top,
+              6,
+            );
+          }, 200);
+          tanyaInput.value = "";
+        }
+      });
+
+      /* =============================================
+   TEMA WARNA
+   ============================================= */
+
+      function applyTheme(t) {
+        const r = document.documentElement.style;
+        r.setProperty("--bg", t.bg);
+        r.setProperty("--bg2", t.bg2);
+        r.setProperty("--accent", t.accent);
+        r.setProperty("--accent2", t.accent2);
+        r.setProperty("--card-border", t.cardBorder);
+        r.setProperty("--accent-glow", t.accentGlow);
+        r.setProperty(
+          "--card",
+          t.accent.replace("#", "rgba(")
+            ? hexToRgba(t.accent, 0.05)
+            : t.cardBorder,
+        );
+        r.setProperty("--card-hover", hexToRgba(t.accent, 0.1));
+        document.body.style.background = t.bg;
+      }
+
+      function hexToRgba(hex, alpha) {
+        const r = parseInt(hex.slice(1, 3), 16);
+        const g = parseInt(hex.slice(3, 5), 16);
+        const b = parseInt(hex.slice(5, 7), 16);
+        return `rgba(${r},${g},${b},${alpha})`;
+      }
+
+      /* =============================================
+   KUE ULANG TAHUN
+   ============================================= */
+
+      const NUM_CANDLES = 5;
+      let candlesLit = false;
+      let candlesBlown = false;
+      let cakeCut = false;
+
+      // Buat lilin
+      const candlesRow = document.getElementById("candlesRow");
+      for (let i = 0; i < NUM_CANDLES; i++) {
+        const candle = document.createElement("div");
+        candle.className = "candle";
+        candle.innerHTML = `
+    <div class="flame-wrap out" data-flame="${i}">
+      <div class="flame"></div>
+    </div>
+    <div class="smoke-puff" data-smoke="${i}"></div>
+    <div class="candle-stripe"></div>
+  `;
+        candlesRow.appendChild(candle);
+      }
+
+      // Buat drip frosting pada layer 1
+      const layer1 = document.querySelector(".cake-layer-1");
+      const dripCount = 7;
+      for (let i = 0; i < dripCount; i++) {
+        const drip = document.createElement("div");
+        drip.className = "cake-drip";
+        drip.style.left = 10 + (80 / (dripCount - 1)) * i + "%";
+        drip.style.setProperty("--drip-h", rand(12, 28) + "px");
+        drip.style.animationDelay = rand(0, 0.8) + "s";
+        layer1.appendChild(drip);
+      }
+
+      // Tombol Nyalakan Lilin
+      document.getElementById("btnNyalakan").addEventListener("click", () => {
+        countPress();
+        if (candlesLit) return;
+        candlesLit = true;
+        document.querySelectorAll(".flame-wrap").forEach((f, i) => {
+          setTimeout(() => f.classList.remove("out"), i * 150);
+        });
+        document.getElementById("btnTiup").disabled = false;
+        showToast("Lilin menyala! Buat permohonan terlebih dahulu...");
+      });
+
+      // Tombol Tiup Lilin
+      document.getElementById("btnTiup").addEventListener("click", () => {
+        countPress();
+        if (!candlesLit || candlesBlown) return;
+        candlesBlown = true;
+        // Padamkan api satu per satu
+        document.querySelectorAll(".flame-wrap").forEach((f, i) => {
+          setTimeout(() => {
+            f.classList.add("out");
+            // Tampilkan asap
+            const smoke = document.querySelector(`[data-smoke="${i}"]`);
+            if (smoke) smoke.classList.add("active");
+          }, i * 120);
+        });
+        // Tampilkan ucapan setelah semua lilin padam
+        setTimeout(
+          () => {
+            document.getElementById("wishText").classList.add("show");
+            document.getElementById("btnPotong").disabled = false;
+            spawnConfetti(50);
+            showToast("Selamat! Harapanmu pasti terwujud!");
+          },
+          NUM_CANDLES * 120 + 400,
+        );
+      });
+
+      // Tombol Potong Kue
+      document.getElementById("btnPotong").addEventListener("click", () => {
+        countPress();
+        if (!candlesBlown || cakeCut) return;
+        cakeCut = true;
+        // Animasi potong - goyangkan kue
+        const cakeBody = document.querySelector(".cake-body");
+        cakeBody.style.transition = "transform 0.3s";
+        cakeBody.style.transform = "scaleX(0.98)";
+        setTimeout(() => {
+          cakeBody.style.transform = "scaleX(1)";
+        }, 300);
+        // Efek
+        spawnBalloons(6);
+        showToast("Kue sudah dipotong! Selamat menikmati!");
+        document.getElementById("btnPotong").disabled = true;
+        document.getElementById("btnPotong").innerHTML =
+          '<i class="fas fa-check"></i>Sudah Dipotong';
+      });
+
+      /* =============================================
+   PERTANYANAN PENTING (TOMBOL BANDEL)
+   ============================================= */
+
+      const btnTidak = document.getElementById("btnTidak");
+      const btnYa = document.getElementById("btnYa");
+      const questionBox = document.getElementById("questionBox");
+      let tidakMoves = 0;
+
+      function moveTidak() {
+        tidakMoves++;
+        const box = questionBox.getBoundingClientRect();
+        const btnRect = btnTidak.getBoundingClientRect();
+        // Posisi acak dalam kotak pertanyaan
+        const maxX = box.width - btnRect.width - 20;
+        const maxY = box.height - btnRect.height - 20;
+        let newX = rand(10, Math.max(11, maxX));
+        let newY = rand(60, Math.max(61, maxY));
+        btnTidak.style.position = "absolute";
+        btnTidak.style.left = newX + "px";
+        btnTidak.style.top = newY + "px";
+        btnTidak.style.transition = "left 0.2s, top 0.2s, transform 0.2s";
+        // Perkecil sedikit
+        const scale = Math.max(0.5, 1 - tidakMoves * 0.08);
+        btnTidak.style.transform = `scale(${scale})`;
+        if (tidakMoves >= 8) {
+          btnTidak.style.opacity = "0";
+          btnTidak.style.pointerEvents = "none";
+          showToast('ehhh tombol "tidak" nyaa gaadaa bosss🤭😝');
+        }
+      }
+
+      btnTidak.addEventListener("mouseenter", moveTidak);
+      btnTidak.addEventListener(
+        "touchstart",
+        (e) => {
+          e.preventDefault();
+          moveTidak();
+        },
+        { passive: false },
+      );
+
+      btnYa.addEventListener("click", () => {
+        countPress();
+        document.getElementById("celebrationText").classList.add("show");
+        // Kembang api besar
+        for (let i = 0; i < 5; i++) {
+          setTimeout(() => {
+            spawnFirework(
+              rand(window.innerWidth * 0.1, window.innerWidth * 0.9),
+              rand(100, window.innerHeight * 0.4),
+            );
+          }, i * 250);
+        }
+        spawnConfetti(100);
+        spawnHearts(window.innerWidth / 2, window.innerHeight / 2, 20);
+      });
+
+      /* =============================================
+   KARTU PESAN CINTA
+   ============================================= */
+
+      const cardsGrid = document.getElementById("cardsGrid");
+      const cardIcons = ["fa-heart", "fa-feather", "fa-moon", "fa-sun"];
+      const cardLabels = [
+        "Mau tau gaa? yaudah sok pencet",
+        "Nih ada lagi nihhh",
+        "Ini ada satu lagi doll",
+        "Kalo yang ini maapp yaa princesss",
+      ];
+
+      cardMessages.forEach((msg, i) => {
+        const card = document.createElement("div");
+        card.className = "love-card";
+        card.setAttribute("role", "button");
+        card.setAttribute("tabindex", "0");
+        card.setAttribute("aria-label", `Kartu pesan ${i + 1}`);
+        card.innerHTML = `
+    <div class="love-card-inner">
+      <div class="love-card-front">
+        <i class="fas ${cardIcons[i]}"></i>
+        <span>${cardLabels[i]}</span>
+      </div>
+      <div class="love-card-back">
+        <p>${msg}</p>
+      </div>
+    </div>
+  `;
+        card.addEventListener("click", () => {
+          card.classList.toggle("flipped");
+          if (card.classList.contains("flipped")) {
+            countPress();
+            // Efek hati kecil di posisi kartu
+            const rect = card.getBoundingClientRect();
+            spawnHearts(
+              rect.left + rect.width / 2,
+              rect.top + rect.height / 2,
+              5,
+            );
+          }
+        });
+        card.addEventListener("keydown", (e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            card.click();
+          }
+        });
+        cardsGrid.appendChild(card);
+      });
+
+      /* =============================================
+   SCROLL ANIMASI & PROGRESS
+   ============================================= */
+
+      // IntersectionObserver untuk animasi masuk
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              entry.target.classList.add("visible");
+            }
+          });
+        },
+        { threshold: 0.15 },
+      );
+
+      document.querySelectorAll("section").forEach((s) => observer.observe(s));
+
+      // Scroll progress bar
+      const progressBar = document.getElementById("scrollProgress");
+      const backToTop = document.getElementById("backToTop");
+      window.addEventListener(
+        "scroll",
+        () => {
+          const scrolled = window.scrollY;
+          const maxScroll =
+            document.documentElement.scrollHeight - window.innerHeight;
+          const pct = maxScroll > 0 ? (scrolled / maxScroll) * 100 : 0;
+          progressBar.style.width = pct + "%";
+          // Tombol kembali ke atas
+          if (scrolled > 400) backToTop.classList.add("visible");
+          else backToTop.classList.remove("visible");
+        },
+        { passive: true },
+      );
+
+      backToTop.addEventListener("click", () => {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      });
+
+      /* =============================================
+   KLIK DI MANA SAJA = HATI KECIL
+   ============================================= */
+
+      document.addEventListener("click", (e) => {
+        // Hati kecil di posisi klik (efek halus)
+        if (
+          e.target.closest("button") ||
+          e.target.closest(".love-card") ||
+          e.target.closest("input")
+        )
+          return;
+        const heart = document.createElement("div");
+        heart.style.cssText = `
+    position:fixed; left:${e.clientX - 6}px; top:${e.clientY - 6}px;
+    color:var(--accent); font-size:12px; pointer-events:none; z-index:9997;
+    animation: heartFly 0.8s ease-out forwards;
+    --tx:0px; --ty:-30px; --dur:0.8s;
+  `;
+        heart.innerHTML = '<i class="fas fa-heart"></i>';
+        document.body.appendChild(heart);
+        setTimeout(() => heart.remove(), 900);
+      });
+
+      /* =============================================
+   INISIALISASI
+   ============================================= */
+
+      // Pastikan hero langsung terlihat
+      document.getElementById("hero").classList.add("visible");
+    </script>
+  </body>
+</html>
